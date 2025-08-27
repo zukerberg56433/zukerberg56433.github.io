@@ -244,5 +244,46 @@
           x: e.clientX,
           y: e.clientY,
           size: Math.random() * 2 + 1,
-          speedX: (Math.random()
-```
+          speedX: (Math.random() - 0.5) * 2,
+          speedY: (Math.random() - 0.5) * 2,
+          opacity: 1,
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+      }
+    });
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.opacity -= 0.02;
+        if (p.opacity <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.opacity})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    function hexToRgb(hex) {
+      const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+      hex = hex.replace(shorthandRegex, (m, r, g, b) => r + r + g + g + b + b);
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ?
+        parseInt(result[1], 16) + "," +
+        parseInt(result[2], 16) + "," +
+        parseInt(result[3], 16)
+        : '255,255,255';
+    }
+
+    animateParticles();
+  </script>
+
+</body>
+</html>
