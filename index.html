@@ -1,147 +1,143 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Welcome</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Varsha's Basement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Using Inter as a close alternative for FKGroteskNeue since it's not a standard web font.
+         If you have FKGroteskNeue as a custom font file, you would use @font-face. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Typography */
+            /* Note: FKGroteskNeue and Geist are typically custom fonts.
+                     'Inter' is used here as a widely available alternative for the base font.
+                     'Roboto Mono' is used for mono to approximate 'Berkeley Mono'.
+                     If you have access to FKGroteskNeue and Berkeley Mono font files,
+                     you would use @font-face to include them. */
+            --font-family-base: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-family-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            --font-size-xs: 11px;
+            --font-size-sm: 12px;
+            --font-size-base: 14px;
+            --font-size-md: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 20px;
+            --font-size-3xl: 24px;
+            --font-size-4xl: 30px;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 600; /* Adjusted from 550 to a common web weight */
+            --font-weight-bold: 700;    /* Adjusted from 600 to a common web weight */
+            --line-height-tight: 1.2;
+            --line-height-normal: 1.5;
+            --letter-spacing-tight: -0.01em;
+        }
+
         body {
-            margin: 0;
-            padding: 0;
             background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', Courier, monospace;
-            overflow: hidden;
+            color: #fff;
+            font-family: var(--font-family-base);
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             height: 100vh;
+            margin: 0;
+            text-align: center;
+            flex-direction: column;
+            overflow: hidden; /* Prevent scrollbars if content slightly overflows */
         }
 
         h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #0f0;
+            font-size: var(--font-size-4xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: 2rem;
+            letter-spacing: var(--letter-spacing-tight);
+            line-height: var(--line-height-tight);
         }
 
-        #enter-button {
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #111;
-            border: 1px solid #0f0;
-            color: #0f0;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        #enter-button:hover {
-            background-color: #0f0;
+        .enter-button {
+            background-color: #fff;
             color: #000;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-medium);
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        #ip-info {
-            margin-top: 30px;
-            white-space: pre-wrap;
-            text-align: center;
-            max-width: 80%;
-            word-wrap: break-word;
+        .enter-button:hover {
+            background-color: #ccc;
         }
 
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
+        .enter-button:active {
+            background-color: #999;
         }
     </style>
 </head>
 <body>
-    <h1>Welcome to Varsha's Basement</h1>
 
-    <button id="enter-button">Click to Enter</button>
+    <h1>Welcome to Varsha's basement.</h1>
+    <button class="enter-button" id="enterButton">click to enter</button>
 
-    <div id="ip-info"></div>
-
-    <!-- Background music -->
-    <audio id="background-music" loop>
-        <source src="music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
-    <canvas id="sparkleCanvas"></canvas>
-
+    <!-- Tone.js for background music -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
-        const button = document.getElementById('enter-button');
-        const ipInfoDiv = document.getElementById('ip-info');
-        const music = document.getElementById('background-music');
+        let backgroundMusicStarted = false;
+        let transportStarted = false;
 
-        button.addEventListener('click', () => {
-            // Play music
-            music.play();
+        const startBackgroundMusic = async () => {
+            if (backgroundMusicStarted) return; // Prevent multiple starts
+            backgroundMusicStarted = true;
 
-            // Fetch IP info
-            fetch('https://ipapi.co/json/')
-                .then(response => response.json())
-                .then(data => {
-                    const ipText = `
-IP Address: ${data.ip}
-City: ${data.city}
-Region: ${data.region}
-Country: ${data.country_name}
-ISP: ${data.org}
-Timezone: ${data.timezone}
-Latitude: ${data.latitude}
-Longitude: ${data.longitude}
-                    `;
-                    ipInfoDiv.textContent = ipText;
-                })
-                .catch(err => {
-                    ipInfoDiv.textContent = "Failed to fetch IP info.";
-                });
-        });
+            await Tone.start(); // This is crucial for audio context to be active
 
-        // Sparkles animation
-        const canvas = document.getElementById('sparkleCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+            const synth = new Tone.Synth().toDestination();
+            const notes = ["C2", "E2", "G2", "B2", "C3", "E3", "G3", "B3", "C4", "E4"];
+            let count = 0;
 
-        const sparkles = [];
-
-        function createSparkle() {
-            return {
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 1.5 + 0.5,
-                alpha: 1,
-                decay: Math.random() * 0.02 + 0.01
-            };
-        }
-
-        function drawSparkles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < sparkles.length; i++) {
-                const s = sparkles[i];
-                ctx.beginPath();
-                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(0, 255, 0, ${s.alpha})`;
-                ctx.fill();
-                s.alpha -= s.decay;
-                if (s.alpha <= 0) {
-                    sparkles[i] = createSparkle();
+            Tone.Transport.scheduleRepeat(time => {
+                const binary = count.toString(2).padStart(notes.length, '0');
+                for (let i = 0; i < binary.length; i++) {
+                    if (binary[i] === '1') {
+                        // Shorten release to make it sound more like binary beeps
+                        synth.triggerAttackRelease(notes[i], "16n", time);
+                    }
                 }
+                count++;
+            }, "8n"); // Schedule an event every 8th note
+
+            if (!transportStarted) {
+                Tone.Transport.start();
+                transportStarted = true;
             }
-            requestAnimationFrame(drawSparkles);
-        }
+        };
+        
+        // Listen for the first user interaction on the document body to start background music
+        // 'once: true' ensures the event listener is removed after it's fired once.
+        document.body.addEventListener('click', startBackgroundMusic, { once: true });
 
-        for (let i = 0; i < 100; i++) {
-            sparkles.push(createSparkle());
-        }
 
-        drawSparkles();
+        // Play sound on button click
+        const enterButton = document.getElementById('enterButton');
+        const enterSound = new Audio('music.mp3'); // Ensure music.mp3 is in the same directory
+
+        enterButton.addEventListener('click', () => {
+            // Ensure audio context is started before playing the click sound as well
+            // This handles cases where the user might click the button first without clicking body.
+            if (!backgroundMusicStarted) {
+                startBackgroundMusic(); // Start background music if not already started
+            }
+            enterSound.play().catch(e => console.error("Error playing enter sound:", e));
+        });
     </script>
+
 </body>
 </html>
-
