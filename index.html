@@ -2,25 +2,146 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>fluffi</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <title>Welcome</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #0f0;
+        }
+
+        #enter-button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #111;
+            border: 1px solid #0f0;
+            color: #0f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #enter-button:hover {
+            background-color: #0f0;
+            color: #000;
+        }
+
+        #ip-info {
+            margin-top: 30px;
+            white-space: pre-wrap;
+            text-align: center;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+    </style>
 </head>
 <body>
+    <h1>Welcome to Varsha's Basement</h1>
 
-  <audio id="bg-audio" loop preload="auto">
-    <source src="music.mp3" type="audio/mp3" />
-  </audio>
+    <button id="enter-button">Click to Enter</button>
 
-  <div id="click-to-enter">Click to Enter</div>
+    <div id="ip-info"></div>
 
-  <div id="output" style="display: none;"></div>
+    <!-- Background music -->
+    <audio id="background-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 
-  <canvas id="sparkleCanvas"></canvas>
+    <canvas id="sparkleCanvas"></canvas>
 
-  <script src="app.js"></script>
+    <script>
+        const button = document.getElementById('enter-button');
+        const ipInfoDiv = document.getElementById('ip-info');
+        const music = document.getElementById('background-music');
 
+        button.addEventListener('click', () => {
+            // Play music
+            music.play();
+
+            // Fetch IP info
+            fetch('https://ipapi.co/json/')
+                .then(response => response.json())
+                .then(data => {
+                    const ipText = `
+IP Address: ${data.ip}
+City: ${data.city}
+Region: ${data.region}
+Country: ${data.country_name}
+ISP: ${data.org}
+Timezone: ${data.timezone}
+Latitude: ${data.latitude}
+Longitude: ${data.longitude}
+                    `;
+                    ipInfoDiv.textContent = ipText;
+                })
+                .catch(err => {
+                    ipInfoDiv.textContent = "Failed to fetch IP info.";
+                });
+        });
+
+        // Sparkles animation
+        const canvas = document.getElementById('sparkleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const sparkles = [];
+
+        function createSparkle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                alpha: 1,
+                decay: Math.random() * 0.02 + 0.01
+            };
+        }
+
+        function drawSparkles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < sparkles.length; i++) {
+                const s = sparkles[i];
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 0, ${s.alpha})`;
+                ctx.fill();
+                s.alpha -= s.decay;
+                if (s.alpha <= 0) {
+                    sparkles[i] = createSparkle();
+                }
+            }
+            requestAnimationFrame(drawSparkles);
+        }
+
+        for (let i = 0; i < 100; i++) {
+            sparkles.push(createSparkle());
+        }
+
+        drawSparkles();
+    </script>
 </body>
 </html>
+
