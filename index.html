@@ -1,42 +1,225 @@
+Thanks for sharing your code — it's a slick, immersive intro with background video, music, sparkles, and a "Click to Enter" gate. You're asking to:
+
+> ✅ Add that **binary music + binary display** that starts after clicking the "Click to Enter" button.
+
+---
+
+### 🛠️ What I'll do:
+
+* ✅ Merge your current setup with the **binary counter + tone.js audio**.
+* ✅ Keep your style, background video, sparkles, and info lines.
+* ✅ Add a **white binary string** displayed underneath the welcome/info lines.
+* ✅ Trigger the **binary music + binary animation** after user click (browser-safe).
+
+---
+
+### ✅ Final Result Summary:
+
+* On first click:
+
+  * Removes "Click to Enter"
+  * Starts music + video + sparkles
+  * Shows your info lines
+  * Plays binary music using `Tone.js`
+  * Displays live binary number in white
+
+---
+
+### ✅ Full Updated HTML + JS (Just Plug & Play):
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Binary Music</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mach9ne</title>
+  <link rel="icon" type="image/png" href="cross.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/tone@14.7.77/build/Tone.min.js"></script>
-  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+
   <style>
-    body {
+    * {
       margin: 0;
-      height: 100vh;
-      background-color: black;
-      font-family: "Source Code Pro", monospace;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Jersey 10', monospace;
+      user-select: none;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      background: black;
+      cursor: pointer;
+    }
+    video#bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+    }
+    audio {
+      display: none;
+    }
+    #click-to-enter {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 28px;
+      text-align: center;
+      white-space: pre-wrap;
+      z-index: 999;
+    }
+    #output {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      color: white;
+      gap: 10px;
+      z-index: 10;
     }
-
-    .title {
-      font-size: 32px;
-      margin-bottom: 20px;
+    .line {
+      font-size: 22px;
+      white-space: pre-wrap;
       text-align: center;
-      letter-spacing: 1px;
+      color: white;
+    }
+    #binary-display {
+      font-size: 36px;
+      color: white;
+      margin-top: 30px;
+      font-family: monospace;
+      letter-spacing: 3px;
     }
 
-    #binary-display {
-      font-size: 48px;
-      color: white;
+    #sparkleCanvas {
+      position: fixed;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
     }
   </style>
 </head>
 <body>
-  <div class="title">Welcome to Varsha's Basement</div>
-  <div id="binary-display">0000000000</div>
+
+  <video autoplay muted loop id="bg-video">
+    <source src="your-video.mp4" type="video/mp4" />
+  </video>
+
+  <audio id="bg-audio" loop preload="auto">
+    <source src="music.mp3" type="audio/mp3" />
+  </audio>
+
+  <div id="click-to-enter">Click to Enter</div>
+
+  <div id="output" style="display: none;">
+    <div class="line">Welcome to Varsha's Basement</div>
+    <div id="binary-display">0000000000</div>
+  </div>
+
+  <canvas id="sparkleCanvas"></canvas>
 
   <script>
-    (function() {
+    let hasStarted = false;
+    const output = document.getElementById('output');
+    const audioEl = document.getElementById('bg-audio');
+    const binaryDisplay = document.getElementById('binary-display');
+
+    document.body.addEventListener('click', () => {
+      if (!hasStarted) {
+        hasStarted = true;
+        document.getElementById('click-to-enter').remove();
+        output.style.display = 'flex';
+        audioEl.play().catch(() => {});
+        Tone.start().then(() => {
+          startBinaryMusic(); // Start music
+          startDisplay();     // Show device info
+        });
+      }
+    });
+
+    async function startDisplay() {
+      let browserData = {};
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        browserData = {
+          ip: data.ip || 'N/A',
+          city: data.city || 'N/A',
+          region: data.region || 'N/A',
+          country: data.country_name || 'N/A',
+          latitude: data.latitude || 'N/A',
+          longitude: data.longitude || 'N/A',
+          timezone: data.timezone || 'N/A',
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          screen: `${screen.width}x${screen.height}`
+        };
+      } catch {
+        browserData = {
+          ip: 'N/A',
+          city: 'N/A',
+          region: 'N/A',
+          country: 'N/A',
+          latitude: 'N/A',
+          longitude: 'N/A',
+          timezone: 'N/A',
+          userAgent: navigator.userAgent,
+          platform: navigator.platform,
+          language: navigator.language,
+          screen: `${screen.width}x${screen.height}`
+        };
+      }
+
+      const lines = () => [
+        `IP Address: ${browserData.ip}`,
+        `Device Info: ${browserData.platform}`,
+        `Browser Info: ${browserData.userAgent}`,
+        `Location: ${browserData.country}, ${browserData.region}, ${browserData.city}`,
+        `Coordinates: ${browserData.latitude}, ${browserData.longitude}`,
+        `Timezone: ${browserData.timezone}`,
+        `Screen Size: ${browserData.screen}`,
+        `Language: ${browserData.language}`
+      ];
+
+      const totalDuration = 2500;
+      const fullText = lines().join('');
+      const perCharDelay = totalDuration / fullText.length;
+
+      for (const lineText of lines()) {
+        const line = document.createElement('div');
+        line.classList.add('line');
+        output.insertBefore(line, binaryDisplay); // Insert above binary
+        await typeFast(line, lineText, perCharDelay);
+      }
+    }
+
+    async function typeFast(el, text, delay) {
+      el.textContent = '';
+      for (let i = 0; i <= text.length; i++) {
+        el.textContent = text.slice(0, i);
+        await sleep(delay);
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function startBinaryMusic() {
       let count = 0;
       let previousBinarySet = "0000000000".split("");
       const notes = ["D4", "E4", "F4", "G4", "A5", "C5", "D5", "E5", "F5", "G5"];
@@ -49,8 +232,6 @@
           oscillator: { partials: [0, 2, 3, 4] }
         }
       }).toDestination();
-
-      const binaryDisplay = document.getElementById("binary-display");
 
       Tone.Transport.bpm.value = 50;
 
@@ -70,12 +251,28 @@
         count = (count + 1) % 1024;
       }, "32i");
 
-      window.addEventListener("click", async () => {
-        await Tone.start();
-        Tone.Transport.start();
-        console.log("Music started.");
-      }, { once: true });
-    })();
-  </script>
-</body>
-</html>
+      Tone.Transport.start();
+    }
+
+    // Sparkle particles
+    const canvas = document.getElementById('sparkleCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const colors = ['#ffffff', '#ffb3ba', '#bae1ff', '#baffc9', '#ffffba', '#ffdfba', '#d7baff'];
+
+    document.addEventListener('mousemove', (e) => {
+      for (let i = 0; i < 3; i++) {
+        particles.push({
+          x: e.clientX,
+          y: e.clientY,
+          size: Math.random() * 2 + 1,
+          speedX: (Math.random()
+```
